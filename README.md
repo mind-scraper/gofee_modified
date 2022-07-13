@@ -17,5 +17,5 @@ estd_tress: float
   
 old_trajectory: string
         Default: None
-        If old_trajectory and restart file are present, the surrogate model from the previous run will be used as the starting model of the current run. 
+        If old_trajectory and restart file are present, the surrogate model from the previous run will be used as the starting model of the current run. Please use a different name from trajectory file, e.g. 'old_structures.traj'. 
 
