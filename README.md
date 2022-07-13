@@ -3,6 +3,11 @@ Modifcation to gofee code
 
 I modify gofee code (https://gitlab.au.dk/au480665/gofee/-/blob/master/gofee/gofee.py) to make it a little more efficient. 
 
+
+How to use this modified code:
+from gofee.gofee_modified import GOFEE
+
+
 I add two following input variables. 
 
 estd_tress: float
@@ -13,3 +18,4 @@ estd_tress: float
 old_trajectory: string
         Default: None
         If old_trajectory and restart file are present, the surrogate model from the previous run will be used as the starting model of the current run. 
+
