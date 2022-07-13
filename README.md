@@ -3,7 +3,7 @@ Modifcation to gofee code
 
 I modify gofee code (https://gitlab.au.dk/au480665/gofee/-/blob/master/gofee/gofee.py) to make it a little more efficient. 
 
-I add two following input variable. 
+I add two following input variables. 
 
 estd_tress: float
         Default: 0
