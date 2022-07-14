@@ -226,7 +226,8 @@ class GOFEE():
             self.old_read()
 
             self.initialize()
-
+            
+            self.gpr = GPR(template_structure=self.structures[0])
             #if gpr is not None:
             #    self.gpr = gpr
             #else:
