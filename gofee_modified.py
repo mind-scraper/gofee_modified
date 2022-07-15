@@ -125,7 +125,7 @@ class GOFEE():
                  trajectory='structures.traj',
                  logfile='search.log',
                  restart='restart.pickl',
-                 old_trajectory=None,
+                 reuse_surrogate=False,
                  estd_tress=0):
         
         if structures is None:
@@ -188,7 +188,7 @@ class GOFEE():
         self.position_constraint = position_constraint
         self.restart = restart
         self.estd_tress = estd_tress
-        
+        self.reuse_surrogate = reuse_surrogate
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
 
@@ -197,10 +197,10 @@ class GOFEE():
             if self.restart:
                 self.traj_name = trajectory
         
-        if isinstance(old_trajectory, str):
-            self.old_trajectory = Trajectory(filename=old_trajectory, mode='a', master=self.master)
-            if self.restart:
-                self.old_traj_name = old_trajectory
+        #if isinstance(old_trajectory, str):
+         #   self.old_trajectory = Trajectory(filename=old_trajectory, mode='a', master=self.master)
+          #  if self.restart:
+           #     self.old_traj_name = old_trajectory
         
         if not self.master:
             logfile = None
@@ -222,12 +222,14 @@ class GOFEE():
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
-        elif old_trajectory is not None:
+        elif reuse_surrogate==True:
             self.old_read()
 
-            self.initialize()
+            #self.initialize()
             
-            self.gpr = GPR(template_structure=self.structures[0])
+            #self.gpr = GPR(template_structure=self.structures[0])
+                       
+            
             #if gpr is not None:
             #    self.gpr = gpr
             #else:
@@ -624,18 +626,25 @@ class GOFEE():
         """
         self.steps, self.population, theta, random_state = pickle.load(open(self.restart, "rb"))
         np.random.set_state(random_state)
-        training_structures = read(self.old_traj_name, index=':')
+        #training_structures = read(self.old_traj_name, index=':')
 
         # Salvage GPR model
-        self.gpr = GPR(template_structure=training_structures[0])
-        self.gpr.memory.save_data(training_structures)
+        #self.gpr = GPR(template_structure=training_structures[0])
+        #self.gpr.memory.save_data(training_structures)
+
+        self.initialize()
+            
+        self.gpr = GPR(template_structure=self.structures[0])
         self.gpr.kernel.theta = theta
 
     def log(self):
         if self.logfile is not None:
             if self.steps == 0:
-                msg = "GOFEE"
+                msg = "GOFEE modified version\n"
                 self.logfile.write(msg)
+                if self.reuse_surrogate == True:
+                    msg = "Reuse surrogate from restart file\n"
+                    self.logfile.write(msg)
 
             self.logfile.write(self.log_msg)
             self.logfile.flush()
