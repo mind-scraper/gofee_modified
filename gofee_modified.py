@@ -633,7 +633,7 @@ class GOFEE():
     def log(self):
         if self.logfile is not None:
             if self.steps == 0:
-                msg = "GOFEE modified version"
+                msg = "GOFEE modified version\n"
                 self.logfile.write(msg)
 
             self.logfile.write(self.log_msg)
