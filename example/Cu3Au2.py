@@ -51,7 +51,7 @@ search1 = GOFEE(calc=calc,
                trajectory='structures.traj',
 	      # position_constraint=box_constraint,
 	       restart='restart.pickl',
-	       estd_tress=0.01,
+	       estd_thr=0.01,
 	       old_trajectory='old_structures.traj')
 
 search1.run()
