@@ -17,8 +17,11 @@ estd_thr: float
         "Threshold for surrogate energy uncertainty. 
         If the the surrogate energy uncertainty (Energy_std) < estd_thr, DFT evaluation and surrogate train will be skipped. 
         The evaluation of the best structure will be done using the surrogate model. "
+```
+
 ``` 
- 
 old_trajectory: string
         Default: None
-        If old_trajectory and restart file are present, the surrogate model from the previous run will be used as the starting model of the current run. Please use a different name from trajectory file, e.g. 'old_structures.traj'. 
+        "If old_trajectory and restart file are present, the surrogate model from the previous run will be used as the starting model of the current run.
+        Please use a different name from trajectory file, e.g. 'old_structures.traj'. "
+```
