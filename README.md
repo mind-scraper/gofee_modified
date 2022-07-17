@@ -5,8 +5,9 @@ I modify gofee code (https://gitlab.au.dk/au480665/gofee/-/blob/master/gofee/gof
 
 
 How to use this modified code:
+'''
 from gofee.gofee_modified import GOFEE
-
+'''
 
 I add two following input variables. 
 
