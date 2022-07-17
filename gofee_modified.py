@@ -126,7 +126,7 @@ class GOFEE():
                  logfile='search.log',
                  restart='restart.pickl',
                  old_trajectory=None,
-                 estd_tress=0):
+                 estd_thr=0):
         
         if structures is None:
             assert startgenerator is not None
@@ -187,7 +187,7 @@ class GOFEE():
         self.min_certainty = min_certainty
         self.position_constraint = position_constraint
         self.restart = restart
-        self.estd_tress = estd_tress
+        self.estd_thr = estd_thr
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
@@ -337,7 +337,7 @@ class GOFEE():
             self.gpr.memory.save_data(a_add)
 
             t4 = time()
-            if anew.info['key_value_pairs']['Epred_std'] > self.estd_tress:            
+            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:            
                 self.train_surrogate()
             else:
                 self.log_msg += "DFT evaluation and training is skipped\n"
@@ -544,7 +544,7 @@ class GOFEE():
         a.wrap()
 
         E, Estd = self.gpr.predict_energy(a, eval_std=True)
-        if Estd < self.estd_tress:
+        if Estd < self.estd_thr:
             E = self.gpr.predict_energy(a)
             F = self.gpr.predict_forces(a)
             results = {'energy': E, 'forces': F}
