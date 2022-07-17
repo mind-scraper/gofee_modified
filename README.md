@@ -10,10 +10,10 @@ from gofee.gofee_modified import GOFEE
 
 I add two following input variables. 
 
-estd_tres: float
+estd_thr: float
         Default: 0
-        Treshold for surrogate energy uncertainty. 
-        If the the surrogate energy uncertainty (Energy_std) < estd_tres, DFT evaluation and surrogate train will be skipped. The evaluation of the best structure will be done using the surrogate model. 
+        Threshold for surrogate energy uncertainty. 
+        If the the surrogate energy uncertainty (Energy_std) < estd_thr, DFT evaluation and surrogate train will be skipped. The evaluation of the best structure will be done using the surrogate model. 
   
 old_trajectory: string
         Default: None
