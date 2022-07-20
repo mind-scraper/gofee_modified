@@ -228,16 +228,9 @@ class GOFEE():
             self.old_read()
 
             self.initialize()
-
-            #if gpr is not None:
-            #    self.gpr = gpr
-            #else:
-            #    self.gpr = GPR(template_structure=self.structures[0])
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
-
-            #self.gpr.kernel.theta = theta
             
             self.comm.barrier()
         ### New line, SAM 22/07
