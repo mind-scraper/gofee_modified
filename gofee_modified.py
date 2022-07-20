@@ -125,8 +125,8 @@ class GOFEE():
                  trajectory='structures.traj',
                  logfile='search.log',
                  restart='restart.pickl',
-                 old_trajectory=None,
-                 estd_thr=0):
+                 old_trajectory=None, #new input variable, SAM 22/07
+                 estd_thr=0): #new input variable, SAM 22/07
         
         if structures is None:
             assert startgenerator is not None
@@ -197,10 +197,12 @@ class GOFEE():
             if self.restart:
                 self.traj_name = trajectory
         
+        ### New lines, SAM 22/07
         if isinstance(old_trajectory, str):
             self.old_trajectory = Trajectory(filename=old_trajectory, mode='a', master=self.master)
             if self.restart:
                 self.old_traj_name = old_trajectory
+        ### New lines, SAM 22/07
         
         if not self.master:
             logfile = None
@@ -220,8 +222,8 @@ class GOFEE():
             else:
                 self.gpr = GPR(template_structure=self.structures[0])
             
-            # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
+        ### New lines, SAM 22/07: To read the old trajectory and reuse surrogate
         elif old_trajectory is not None:
             self.old_read()
 
@@ -238,6 +240,7 @@ class GOFEE():
             #self.gpr.kernel.theta = theta
             
             self.comm.barrier()
+        ### New line, SAM 22/07
         elif trajectory is not None:
             self.read()
             self.comm.barrier()
@@ -296,7 +299,7 @@ class GOFEE():
                     # Write without evaluating.
                     structures_init.append(a)
                     continue
-            a = self.evaluate_initial(a)
+            a = self.evaluate_initial(a) #modified, SAM 22/07. Previous: a = self.evaluate(a)
             structures_init.append(a)
 
         self.gpr.memory.save_data(structures_init)
@@ -307,7 +310,7 @@ class GOFEE():
         """
         if self.steps == 0:
             self.evaluate_initial_structures()
-            self.train_surrogate()
+            self.train_surrogate() # new line, SAM 22/07
 
         while self.steps < self.max_steps:
             self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
@@ -337,14 +340,16 @@ class GOFEE():
             self.gpr.memory.save_data(a_add)
 
             t4 = time()
+            # New lines, SAM 22/07: To skip training.
             if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:            
                 self.train_surrogate()
             else:
                 self.log_msg += "DFT evaluation and training is skipped\n"
+            #New lines, SAM 22/07
             
             # log timing
             self.log_msg += "Timing:\n"
-            self.log_msg += f"{'Relax pop.':12}{'Make cands.':12}{'Relax cands.':15}{'Evaluate':16}{'Training':12}\n"
+            self.log_msg += f"{'Relax pop.':12}{'Make cands.':12}{'Relax cands.':15}{'Evaluate':16}{'Training':12}\n" #Modified, SAM 22/07. Training is moved to end. 
             self.log_msg += f"{t1-t0:<12.2e}{t2-t1:<12.2e}{t3-t2:<15.2e}{t4-t3:<16.2e}{time()-t4:<12.2e}\n\n"
 
             # Add structure to population
@@ -497,11 +502,8 @@ class GOFEE():
         index_select = np.argmin(acquisition)
         return structures[index_select]
 
-
+    # New function, Sam: To evaluate initial structures only. 
     def evaluate_initial(self, a):
-        """ Method to evaluate the energy and forces of the selacted
-        candidate.
-        """
         a = self.comm.bcast(a, root=0)
         a.wrap()
 
@@ -534,15 +536,16 @@ class GOFEE():
         self.write(a)
 
         return a
-
-
+    #New function, SAM 22/07
+    
     def evaluate(self, a):
         """ Method to evaluate the energy and forces of the selacted
         candidate.
         """
         a = self.comm.bcast(a, root=0)
         a.wrap()
-
+        
+        # New lines, SAM 22/07: To skip DFT. 
         E, Estd = self.gpr.predict_energy(a, eval_std=True)
         if Estd < self.estd_thr:
             E = self.gpr.predict_energy(a)
@@ -551,7 +554,7 @@ class GOFEE():
             calc_sp = SinglePointCalculator(a, **results)
             a.set_calculator(calc_sp)
         else:
-        
+        #New lines, SAM 22/07.
             if isinstance(self.calc, Dftb):
                 if self.master:
                     try:
@@ -616,11 +619,9 @@ class GOFEE():
         self.gpr = GPR(template_structure=training_structures[0])
         self.gpr.memory.save_data(training_structures)
         self.gpr.kernel.theta = theta
-
+    
+    # New function, SAM 22/07: To read restart and old_trajectory
     def old_read(self):
-        """ Method to restart a search from the restart-file and the
-        trajectory-file containing all structures evaluated so far.
-        """
         self.steps, self.population, theta, random_state = pickle.load(open(self.restart, "rb"))
         np.random.set_state(random_state)
         training_structures = read(self.old_traj_name, index=':')
@@ -629,7 +630,8 @@ class GOFEE():
         self.gpr = GPR(template_structure=training_structures[0])
         self.gpr.memory.save_data(training_structures)
         self.gpr.kernel.theta = theta
-
+    # New function, SAM 22/07. 
+        
     def log(self):
         if self.logfile is not None:
             if self.steps == 0:
