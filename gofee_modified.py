@@ -225,9 +225,10 @@ class GOFEE():
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
         ### New lines, SAM 22/07: To read the old trajectory and reuse surrogate
         elif old_trajectory is not None:
+            self.get_initial_structures()
             self.old_read()
 
-            self.initialize()
+            self.steps = 0
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
