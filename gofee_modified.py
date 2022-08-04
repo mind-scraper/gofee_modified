@@ -179,7 +179,7 @@ class GOFEE():
         self.master = self.comm.rank == 0
 
         self.kappa = kappa
-        self.max_steps = max_steps
+        #self.max_steps = max_steps
         self.Ninit = Ninit
         self.max_relax_dist = max_relax_dist
         self.Ncandidates = Ncandidates
@@ -188,6 +188,13 @@ class GOFEE():
         self.position_constraint = position_constraint
         self.restart = restart
         self.estd_thr = estd_thr
+        
+        #New lines, SAM 22/07/04
+        if old_trajectory is not None:
+            self.max_steps = max_steps + 50
+        else:
+            self.max_steps = max_steps
+        #New lines, SAM
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
@@ -309,7 +316,7 @@ class GOFEE():
             self.evaluate_initial_structures()
             self.train_surrogate()
         #New lines, SAM 22/08/04, to reduce train
-
+        
         while self.steps < self.max_steps:
             if self.old_trajectory is not None:
                 self.log_msg += (f"\n##### STEPS: {self.steps - 50} #####\n\n")
