@@ -227,13 +227,11 @@ class GOFEE():
         elif old_trajectory is not None:
             self.get_initial_structures()
             self.old_read()
-
-            self.steps = 0
+            self.comm.barrier()
+            self.steps = 50
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
-            
-            self.comm.barrier()
         ### New line, SAM 22/07
         elif trajectory is not None:
             self.read()
@@ -305,9 +303,18 @@ class GOFEE():
         if self.steps == 0:
             self.evaluate_initial_structures()
             self.train_surrogate() # new line, SAM 22/07
+        
+        #New lines, SAM 22/08/04, to reduce train
+        if self.old_trajectory is not None and self.steps == 50:
+            self.evaluate_initial_structures()
+            self.train_surrogate()
+        #New lines, SAM 22/08/04, to reduce train
 
         while self.steps < self.max_steps:
-            self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
+            if self.old_trajectory is not None:
+                self.log_msg += (f"\n##### STEPS: {self.steps - 50} #####\n\n")
+            else:
+                self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
             t0 = time()
             self.update_population()
             t1 = time()
