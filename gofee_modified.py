@@ -305,13 +305,13 @@ class GOFEE():
             self.train_surrogate() # new line, SAM 22/07
         
         #New lines, SAM 22/08/04, to reduce train
-        if old_trajectory is not None and self.steps == 50:
+        if self.old_trajectory is not None and self.steps == 50:
             self.evaluate_initial_structures()
             self.train_surrogate()
         #New lines, SAM 22/08/04, to reduce train
 
         while self.steps < self.max_steps:
-            if old_trajectory is not None:
+            if self.old_trajectory is not None:
                 self.log_msg += (f"\n##### STEPS: {self.steps - 50} #####\n\n")
             else:
                 self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
