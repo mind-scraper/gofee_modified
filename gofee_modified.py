@@ -305,7 +305,7 @@ class GOFEE():
             self.train_surrogate() # new line, SAM 22/07
         
         #New lines, SAM 22/08/04, to reduce train
-        if old_trajectory is not None and self.steps == 50
+        if old_trajectory is not None and self.steps == 50:
             self.evaluate_initial_structures()
             self.train_surrogate()
         #New lines, SAM 22/08/04, to reduce train
