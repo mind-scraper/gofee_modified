@@ -345,7 +345,9 @@ class GOFEE():
                     kappa /=2
                     if self.master:
                         traceback.print_exc(file=sys.stderr)
-            self.gpr.memory.save_data(a_add)
+                        
+            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                self.gpr.memory.save_data(a_add)
 
             t4 = time()
             # New lines, SAM 22/07: To skip training.
@@ -554,7 +556,7 @@ class GOFEE():
         a.wrap()
         
         # New lines, SAM 22/07: To skip DFT. 
-        E, Estd = self.gpr.predict_energy(a, eval_std=True)
+        Estd = self.gpr.predict_energy(a, eval_std=True)
         if Estd < self.estd_thr:
             E = self.gpr.predict_energy(a)
             F = self.gpr.predict_forces(a)
