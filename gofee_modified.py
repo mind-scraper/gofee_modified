@@ -345,7 +345,9 @@ class GOFEE():
                     kappa /=2
                     if self.master:
                         traceback.print_exc(file=sys.stderr)
-            self.gpr.memory.save_data(a_add)
+                        
+            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                self.gpr.memory.save_data(a_add)
 
             t4 = time()
             # New lines, SAM 22/07: To skip training.
