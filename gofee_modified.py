@@ -556,7 +556,7 @@ class GOFEE():
         a.wrap()
         
         # New lines, SAM 22/07: To skip DFT. 
-        Estd = self.gpr.predict_energy(a, eval_std=True)
+        E, Estd = self.gpr.predict_energy(a, eval_std=True)
         if Estd < self.estd_thr:
             E = self.gpr.predict_energy(a)
             F = self.gpr.predict_forces(a)
