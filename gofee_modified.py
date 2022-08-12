@@ -298,7 +298,7 @@ class GOFEE():
                     # Write without evaluating.
                     structures_init.append(a)
                     continue
-            a = self.evaluate_initial(a) #modified, SAM 22/07. Previous: a = self.evaluate(a)
+            a = self.evaluate(a) #modified, SAM 22/07. Previous: a = self.evaluate(a)
             structures_init.append(a)
 
         self.gpr.memory.save_data(structures_init)
@@ -334,20 +334,27 @@ class GOFEE():
             for _ in range(5):
                 try:
                     anew = self.select_with_acquisition(relaxed_candidates, kappa)
-                    anew = self.evaluate(anew)
-                    a_add.append(anew)
+                    
+                    if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                        anew = self.evaluate(anew)
+                        a_add.append(anew)
+                    else:
+                        self.write(anew)
+                        
                     if self.dualpoint:
-                        adp = self.get_dualpoint(anew)
-                        adp = self.evaluate(adp)
-                        a_add.append(adp)
+                        if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                            adp = self.get_dualpoint(anew)
+                            adp = self.evaluate(adp)
+                            a_add.append(adp)
+                        else:
+                            self.write(anew)
                     break
                 except Exception as err:
                     kappa /=2
                     if self.master:
                         traceback.print_exc(file=sys.stderr)
                         
-            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
-                self.gpr.memory.save_data(a_add)
+            self.gpr.memory.save_data(a_add)
 
             t4 = time()
             # New lines, SAM 22/07: To skip training.
@@ -370,7 +377,8 @@ class GOFEE():
             self.save_state()
             
             self.log_msg += (f"Prediction:\nenergy = {anew.info['key_value_pairs']['Epred']:.5f}eV,  energy_std = {anew.info['key_value_pairs']['Epred_std']:.5f}eV\n")
-            self.log_msg += (f"E_true:\n{array_to_string([a.get_potential_energy() for a in a_add], unit='eV')}\n\n")
+            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                self.log_msg += (f"E_true:\n{array_to_string([a.get_potential_energy() for a in a_add], unit='eV')}\n\n")
             #self.log_msg += (f"E_true: {[a.get_potential_energy() for a in a_add]}\n")
             self.log_msg += (f"Energy of population:\n{array_to_string([a.get_potential_energy() for a in self.population.pop], unit='eV')}\n")
             self.log_msg += (f"Max force of ML-relaxed population:\n{array_to_string([(a.get_forces()**2).sum(axis=1).max()**0.5 for a in self.population.pop_MLrelaxed], unit='eV/A')}\n")
@@ -513,7 +521,7 @@ class GOFEE():
         return structures[index_select]
 
     # New function, Sam: To evaluate initial structures only. 
-    def evaluate_initial(self, a):
+    def evaluate(self, a):
         a = self.comm.bcast(a, root=0)
         a.wrap()
 
@@ -547,53 +555,6 @@ class GOFEE():
 
         return a
     #New function, SAM 22/07
-    
-    def evaluate(self, a):
-        """ Method to evaluate the energy and forces of the selacted
-        candidate.
-        """
-        a = self.comm.bcast(a, root=0)
-        a.wrap()
-        
-        # New lines, SAM 22/07: To skip DFT. 
-        E, Estd = self.gpr.predict_energy(a, eval_std=True)
-        if Estd < self.estd_thr:
-            E = self.gpr.predict_energy(a)
-            F = self.gpr.predict_forces(a)
-            results = {'energy': E, 'forces': F}
-            calc_sp = SinglePointCalculator(a, **results)
-            a.set_calculator(calc_sp)
-        else:
-        #New lines, SAM 22/07.
-            if isinstance(self.calc, Dftb):
-                if self.master:
-                    try:
-                        a.set_calculator(self.calc)
-                        E = a.get_potential_energy()
-                        F = a.get_forces()
-                        results = {'energy': E, 'forces': F}
-                        calc_sp = SinglePointCalculator(a, **results)
-                        a.set_calculator(calc_sp)
-                        success = True
-                    except:
-                        success = False
-                else:
-                    success = None
-                success = self.comm.bcast(success, root=0)
-                if success == False:
-                    raise RuntimeError('DFTB evaluation failed')
-                a = self.comm.bcast(a, root=0)
-            else:
-                a.set_calculator(self.calc)
-                E = a.get_potential_energy()
-                F = a.get_forces()
-                results = {'energy': E, 'forces': F}
-                calc_sp = SinglePointCalculator(a, **results)
-                a.set_calculator(calc_sp)
-
-        self.write(a)
-
-        return a
 
     def write(self, a):
         """ Method for writing new evaluated structures to file.
