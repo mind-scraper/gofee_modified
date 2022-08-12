@@ -113,7 +113,7 @@ class GOFEE():
                  gpr=None,
                  startgenerator=None,
                  candidate_generator=None,
-                 kappa=2,
+                 #kappa=2,
                  max_steps=200,
                  Ninit=10,
                  max_relax_dist=4,
@@ -499,14 +499,23 @@ class GOFEE():
         optimization is significantly more expensive than the basic
         training.
         """
-        # Train
-        if self.steps < 50 or (self.steps % 10) == 0:
-            self.gpr.optimize_hyperparameters(comm=self.comm)
-            self.log_msg += (f"lml: {self.gpr.lml}\n")
-            self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+        # Train #2022/08/12: SAM, reduce hyperparameter optimization for run with prev. surrogate. 
+        if self.old_trajectory is not None:
+            if (self.steps % 10) == 0:
+                self.gpr.optimize_hyperparameters(comm=self.comm)
+                self.log_msg += (f"lml: {self.gpr.lml}\n")
+                self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            else:
+                self.gpr.train()
+                self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
         else:
-            self.gpr.train()
-            self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            if self.steps < 50 or (self.steps % 10) == 0:
+                self.gpr.optimize_hyperparameters(comm=self.comm)
+                self.log_msg += (f"lml: {self.gpr.lml}\n")
+                self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            else:
+                self.gpr.train()
+                self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
 
     def select_with_acquisition(self, structures, kappa):
         """ Method to select single most "promizing" candidate 
@@ -520,8 +529,7 @@ class GOFEE():
         acquisition = Epred - kappa*Epred_std
         index_select = np.argmin(acquisition)
         return structures[index_select]
-
-    # New function, Sam: To evaluate initial structures only. 
+    
     def evaluate(self, a):
         a = self.comm.bcast(a, root=0)
         a.wrap()
@@ -555,7 +563,6 @@ class GOFEE():
         self.write(a)
 
         return a
-    #New function, SAM 22/07
 
     def write(self, a):
         """ Method for writing new evaluated structures to file.
