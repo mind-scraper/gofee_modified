@@ -626,6 +626,6 @@ class GOFEE():
 
             self.logfile.write(self.log_msg)
             self.logfile.flush()
-        self.log_msg = ''
+        self.log_msg = '' 
 
 
