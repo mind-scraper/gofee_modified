@@ -235,7 +235,7 @@ class GOFEE():
             self.get_initial_structures()
             self.old_read()
             self.comm.barrier()
-            self.steps = 50
+            self.steps = 0
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
@@ -318,10 +318,7 @@ class GOFEE():
         #New lines, SAM 22/08/04, to reduce train
         
         while self.steps < self.max_steps:
-            if self.old_trajectory is not None:
-                self.log_msg += (f"\n##### STEPS: {self.steps - 50} #####\n\n")
-            else:
-                self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
+            self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
             t0 = time()
             self.update_population()
             t1 = time()
