@@ -203,6 +203,8 @@ class GOFEE():
             self.old_trajectory = Trajectory(filename=old_trajectory, mode='a', master=self.master)
             if self.restart:
                 self.old_traj_name = old_trajectory
+        else:
+            self.old_trajectory = old_trajectory
         ### New lines, SAM 22/07
         
         if not self.master:
