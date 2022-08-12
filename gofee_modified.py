@@ -179,7 +179,7 @@ class GOFEE():
         self.master = self.comm.rank == 0
 
         self.kappa = kappa
-        #self.max_steps = max_steps
+        self.max_steps = max_steps
         self.Ninit = Ninit
         self.max_relax_dist = max_relax_dist
         self.Ncandidates = Ncandidates
@@ -189,13 +189,6 @@ class GOFEE():
         self.restart = restart
         self.estd_thr = estd_thr
         self.dataset = None #2022/08/12 SAM: number of data from old_trajectory
-        
-        #New lines, SAM 22/07/04
-        if old_trajectory is not None:
-            self.max_steps = max_steps + 50
-        else:
-            self.max_steps = max_steps
-        #New lines, SAM
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
