@@ -310,6 +310,8 @@ class GOFEE():
         """
         if self.steps == 0:
             self.evaluate_initial_structures()
+            
+            self.log_msg += "#### Training result from previous and current initial data: #####\n "
             self.train_surrogate() # new line, SAM 22/07
                
         while self.steps < self.max_steps:
@@ -612,7 +614,7 @@ class GOFEE():
                 msg1 = "GOFEE modified version\n"
                 self.logfile.write(msg1)
                 if self.old_trajectory is not None: #2022/08/12 SAM: number of data from old_trajectory
-                    msg2 = (f"Number of structures in old_trajectory = {self.dataset} \n")
+                    msg2 = (f"Number of structures in old_trajectory = {self.dataset} \n\n")
                     self.logfile.write(msg2)
 
             self.logfile.write(self.log_msg)
