@@ -113,7 +113,7 @@ class GOFEE():
                  gpr=None,
                  startgenerator=None,
                  candidate_generator=None,
-                 #kappa=2,
+                 kappa=2,
                  max_steps=200,
                  Ninit=10,
                  max_relax_dist=4,
@@ -188,6 +188,7 @@ class GOFEE():
         self.position_constraint = position_constraint
         self.restart = restart
         self.estd_thr = estd_thr
+        self.dataset = None #2022/08/12 SAM: number of data from old_trajectory
         
         #New lines, SAM 22/07/04
         if old_trajectory is not None:
@@ -310,13 +311,7 @@ class GOFEE():
         if self.steps == 0:
             self.evaluate_initial_structures()
             self.train_surrogate() # new line, SAM 22/07
-        
-        #New lines, SAM 22/08/04, to reduce train
-        if self.old_trajectory is not None and self.steps == 50:
-            self.evaluate_initial_structures()
-            self.train_surrogate()
-        #New lines, SAM 22/08/04, to reduce train
-        
+               
         while self.steps < self.max_steps:
             self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
             t0 = time()
@@ -606,13 +601,19 @@ class GOFEE():
         self.gpr = GPR(template_structure=training_structures[0])
         self.gpr.memory.save_data(training_structures)
         self.gpr.kernel.theta = theta
+        
+        # Number of prev. dataset
+        self.dataset = len(training_structures) #2022/08/12 SAM: number of data from old_trajectory
     # New function, SAM 22/07. 
         
     def log(self):
         if self.logfile is not None:
             if self.steps == 0:
-                msg = "GOFEE modified version\n"
-                self.logfile.write(msg)
+                msg1 = "GOFEE modified version\n"
+                self.logfile.write(msg1)
+                if self.old_trajectory is not None: #2022/08/12 SAM: number of data from old_trajectory
+                    msg2 = (f"Number of structures in old_trajectory = {self.dataset} \n")
+                    self.logfile.write(msg2)
 
             self.logfile.write(self.log_msg)
             self.logfile.flush()
