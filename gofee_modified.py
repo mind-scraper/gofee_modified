@@ -240,7 +240,7 @@ class GOFEE():
     
     def get_kappa(self):
         """22/08/12, SAM: Method to get kappa as a function if it is specify in the input."""
-        if self.kappa = "function":
+        if self.kappa == "function":
             if self.max_steps < 401:
                 kappa = 1 + 0.02 * self.max_steps * mat.exp(- self.steps^2 / (self.max_steps^1.75))
             else:
