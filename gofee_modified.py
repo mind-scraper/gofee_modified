@@ -370,8 +370,9 @@ class GOFEE():
             self.log_msg += f"{t1-t0:<12.2e}{t2-t1:<12.2e}{t3-t2:<15.2e}{t4-t3:<16.2e}{time()-t4:<12.2e}\n\n"
 
             # Add structure to population
-            index_lowest = np.argmin([a.get_potential_energy() for a in a_add])
-            self.population.add([a_add[index_lowest]])
+            if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
+                index_lowest = np.argmin([a.get_potential_energy() for a in a_add])
+                self.population.add([a_add[index_lowest]])
 
             # Save search state
             self.save_state()
