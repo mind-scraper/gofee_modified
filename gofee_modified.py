@@ -179,7 +179,7 @@ class GOFEE():
         self.master = self.comm.rank == 0
 
         self.kappa = kappa
-        #self.max_steps = max_steps
+        self.max_steps = max_steps
         self.Ninit = Ninit
         self.max_relax_dist = max_relax_dist
         self.Ncandidates = Ncandidates
@@ -188,13 +188,7 @@ class GOFEE():
         self.position_constraint = position_constraint
         self.restart = restart
         self.estd_thr = estd_thr
-        
-        #New lines, SAM 22/07/04
-        if old_trajectory is not None:
-            self.max_steps = max_steps + 50
-        else:
-            self.max_steps = max_steps
-        #New lines, SAM
+        self.dataset = None #2022/08/12 SAM: number of data from old_trajectory
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
@@ -235,7 +229,7 @@ class GOFEE():
             self.get_initial_structures()
             self.old_read()
             self.comm.barrier()
-            self.steps = 50
+            self.steps = 0
             
             # Initialize population
             self.population = Population(population_size=population_size, gpr=self.gpr, similarity2equal=0.9999)
@@ -309,19 +303,12 @@ class GOFEE():
         """
         if self.steps == 0:
             self.evaluate_initial_structures()
+            
+            self.log_msg += "#### Training result from previous and current initial data: #####\n "
             self.train_surrogate() # new line, SAM 22/07
-        
-        #New lines, SAM 22/08/04, to reduce train
-        if self.old_trajectory is not None and self.steps == 50:
-            self.evaluate_initial_structures()
-            self.train_surrogate()
-        #New lines, SAM 22/08/04, to reduce train
-        
+               
         while self.steps < self.max_steps:
-            if self.old_trajectory is not None:
-                self.log_msg += (f"\n##### STEPS: {self.steps - 50} #####\n\n")
-            else:
-                self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
+            self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
             t0 = time()
             self.update_population()
             t1 = time()
@@ -499,14 +486,23 @@ class GOFEE():
         optimization is significantly more expensive than the basic
         training.
         """
-        # Train
-        if self.steps < 50 or (self.steps % 10) == 0:
-            self.gpr.optimize_hyperparameters(comm=self.comm)
-            self.log_msg += (f"lml: {self.gpr.lml}\n")
-            self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+        # Train #2022/08/12: SAM, reduce hyperparameter optimization for run with prev. surrogate. 
+        if self.old_trajectory is not None:
+            if (self.steps % 10) == 0:
+                self.gpr.optimize_hyperparameters(comm=self.comm)
+                self.log_msg += (f"lml: {self.gpr.lml}\n")
+                self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            else:
+                self.gpr.train()
+                self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
         else:
-            self.gpr.train()
-            self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            if self.steps < 50 or (self.steps % 10) == 0:
+                self.gpr.optimize_hyperparameters(comm=self.comm)
+                self.log_msg += (f"lml: {self.gpr.lml}\n")
+                self.log_msg += (f"kernel optimized:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
+            else:
+                self.gpr.train()
+                self.log_msg += (f"kernel fixed:\nTheta = {[f'{x:.2e}' for x in np.exp(self.gpr.kernel.theta)]}\n\n")
 
     def select_with_acquisition(self, structures, kappa):
         """ Method to select single most "promizing" candidate 
@@ -520,8 +516,7 @@ class GOFEE():
         acquisition = Epred - kappa*Epred_std
         index_select = np.argmin(acquisition)
         return structures[index_select]
-
-    # New function, Sam: To evaluate initial structures only. 
+    
     def evaluate(self, a):
         a = self.comm.bcast(a, root=0)
         a.wrap()
@@ -555,7 +550,6 @@ class GOFEE():
         self.write(a)
 
         return a
-    #New function, SAM 22/07
 
     def write(self, a):
         """ Method for writing new evaluated structures to file.
@@ -602,13 +596,19 @@ class GOFEE():
         self.gpr = GPR(template_structure=training_structures[0])
         self.gpr.memory.save_data(training_structures)
         self.gpr.kernel.theta = theta
+        
+        # Number of prev. dataset
+        self.dataset = len(training_structures) #2022/08/12 SAM: number of data from old_trajectory
     # New function, SAM 22/07. 
         
     def log(self):
         if self.logfile is not None:
             if self.steps == 0:
-                msg = "GOFEE modified version\n"
-                self.logfile.write(msg)
+                msg1 = "GOFEE modified version\n"
+                self.logfile.write(msg1)
+                if self.old_trajectory is not None: #2022/08/12 SAM: number of data from old_trajectory
+                    msg2 = (f"Number of structures in old_trajectory = {self.dataset} \n\n")
+                    self.logfile.write(msg2)
 
             self.logfile.write(self.log_msg)
             self.logfile.flush()
