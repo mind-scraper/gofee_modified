@@ -1,6 +1,6 @@
 """ Definition of GOFEE class.
 """
-
+import math #to calculate exponential
 import numpy as np
 import pickle
 from os.path import isfile
@@ -237,7 +237,17 @@ class GOFEE():
         elif trajectory is not None:
             self.read()
             self.comm.barrier()
-
+    
+    def get_kappa(self):
+        """22/08/12, SAM: Method to get kappa as a function if it is specify in the input."""
+        if self.kappa = "function":
+            if self.max_steps < 401:
+                kappa = 1 + 0.02 * self.max_steps * mat.exp(- self.steps^2 / (self.max_steps^1.75))
+            else:
+                kappa = 1 + 8 * mat.exp(- self.steps^2 / (self.max_steps^1.75))
+        else:
+            kappa = self.kappa
+        return kappa
 
     def initialize(self):
         self.get_initial_structures()
@@ -316,7 +326,8 @@ class GOFEE():
             t2 = time()
             relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
             t3 = time()
-            kappa = self.kappa
+            kappa = self.get_kappa()
+            self.log_msg += (f"kappa = {kappa} \n")
             a_add = []
             for _ in range(5):
                 try:
@@ -415,8 +426,9 @@ class GOFEE():
         """
         Njobs = self.Ncandidates
         task_split = split(Njobs, self.comm.size)
+        
         def func2():
-            return [self.surrogate_relaxation(candidates[i], Fmax=0.1, steps=200, kappa=self.kappa)
+            return [self.surrogate_relaxation(candidates[i], Fmax=0.1, steps=200, kappa=self.get_kappa())
                     for i in task_split[self.comm.rank]]
         relaxed_candidates = parallel_function_eval(self.comm, func2)
         relaxed_candidates = self.certainty_filter(relaxed_candidates)
@@ -441,11 +453,13 @@ class GOFEE():
                           position_constraint=self.position_constraint)
         # Evaluate uncertainty
         E, Estd = self.gpr.predict_energy(a_relaxed, eval_std=True)
-
+        
+        
+        
         # Save prediction in info-dict
         a_relaxed.info['key_value_pairs']['Epred'] = E
         a_relaxed.info['key_value_pairs']['Epred_std'] = Estd
-        a_relaxed.info['key_value_pairs']['kappa'] = self.kappa
+        a_relaxed.info['key_value_pairs']['kappa'] = self.get_kappa()
         
         return a_relaxed
         
