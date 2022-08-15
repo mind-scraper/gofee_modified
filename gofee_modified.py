@@ -244,9 +244,9 @@ class GOFEE():
         """22/08/12, SAM: Method to get kappa as a function if it is specify in the input."""
         if self.kappa == "function":
             if self.max_steps < 401:
-                kappa = 1 + 0.02 * self.max_steps * math.exp(- self.steps ** 2 / (self.max_steps ** 1.75))
+                kappa = 1 + 0.02 * self.max_steps * math.exp(- self.steps ** 2 / (0.25 * self.max_steps ** 2))
             else:
-                kappa = 1 + 8 * math.exp(- self.steps ** 2 / (self.max_steps ** 1.75))
+                kappa = 1 + 8 * math.exp(- self.steps ** 2 / (0.25 * self.max_steps ** 2))
         else:
             kappa = self.kappa
         return kappa
