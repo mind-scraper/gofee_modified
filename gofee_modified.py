@@ -325,7 +325,7 @@ class GOFEE():
                     if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:
                         anew = self.evaluate(anew)
                         a_add.append(anew)
-                        self.gpr.memory.save_data(a_add)
+                        #self.gpr.memory.save_data(a_add)
                     else:
                         self.write(anew)
                         
@@ -334,7 +334,7 @@ class GOFEE():
                             adp = self.get_dualpoint(anew)
                             adp = self.evaluate(adp)
                             a_add.append(adp)
-                            self.gpr.memory.save_data(a_add)
+                            #self.gpr.memory.save_data(a_add)
                         else:
                             self.write(anew)
                     break
@@ -342,14 +342,16 @@ class GOFEE():
                     kappa /=2
                     if self.master:
                         traceback.print_exc(file=sys.stderr)
-                      
+            
+            self.gpr.memory.save_data(a_add)
+            
             t4 = time()
             # New lines, SAM 22/07: To skip training.
             if anew.info['key_value_pairs']['Epred_std'] > self.estd_thr:            
                 self.train_surrogate()
             else:
                 self.log_msg += "DFT evaluation and training is skipped\n"
-            #New lines, SAM 22/07
+            #New lines, SAM 22/07          
             
             # log timing
             self.log_msg += "Timing:\n"
